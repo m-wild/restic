@@ -1,11 +1,13 @@
 package fs
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/restic/restic/internal/restic"
@@ -133,4 +135,21 @@ func openHandleForEA(nodeType restic.NodeType, path string, writeAccess bool) (h
 		return 0, nil
 	}
 	return handle, err
+}
+
+// RecallOnDataAccess checks if a file is available locally on the disk or if the file is
+// just a placeholder which must be downloaded from a remote server. This is typically used
+// in cloud syncing services (e.g. OneDrive) to prevent downloading files from cloud storage
+// until they are accessed.
+func RecallOnDataAccess(fi *ExtendedFileInfo) (bool, error) {
+	attrs, ok := fi.sys.(*syscall.Win32FileAttributeData)
+	if !ok {
+		return false, fmt.Errorf("could not determine file attributes: %s", fi.Name)
+	}
+
+	if attrs.FileAttributes&windows.FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }

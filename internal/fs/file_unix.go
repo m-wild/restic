@@ -48,3 +48,8 @@ func chmod(name string, mode os.FileMode) error {
 
 	return err
 }
+
+// RecallOnDataAccess checks windows-specific attributes to determine if a file is a cloud-only placeholder.
+func RecallOnDataAccess(fi *ExtendedFileInfo) (bool, error) {
+	return false, nil
+}
